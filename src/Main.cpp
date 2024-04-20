@@ -6,11 +6,6 @@
 int main(int argc, char* argv[]) 
 {
 	editor::Logger::SetSeverityThreshold(editor::Severity::Info);
-	
-	editor::Logger::Print(editor::Severity::Info, "ahhs {}", 90);
-	editor::Logger::Warning("Test, {}", 78);
-
-	editor::Logger::Fatal("AHHHhhhhh");
 
 
 	SDL_Init(SDL_INIT_EVERYTHING);

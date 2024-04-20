@@ -19,7 +19,7 @@ namespace editor
     };
 
     /*  Converts a Severity enum to a string */
-    static std::string SeverityToString(Severity severity) 
+    static const std::string& SeverityToString(Severity severity) 
     {
         switch(severity) 
         {
@@ -47,8 +47,12 @@ namespace editor
             m_Threshold = severity; 
         }
         
-        /* Base print function */
-        /* TODO: Add colour functionality */
+        /* 
+            Base print function 
+        
+            TODO: Add colour functionality 
+        */
+
         template<class ... Args> 
         static void Print(Severity severity, const std::string& str, Args&&... args) 
         {
@@ -60,6 +64,7 @@ namespace editor
             std::string formattedString = fmt::format(str, std::forward<Args>(args)...);
             
             // Output to stdout
+            // TODO: Change this to be a customisable ostream 
             std::cout << fmt::format("[{}] -> {}\n", SeverityToString(severity), formattedString);
 
             if (severity == Severity::Fatal) 

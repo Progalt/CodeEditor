@@ -1,32 +1,28 @@
 #include <cstdio>
 #include <SDL2/SDL.h>
 #include "Core/Logger.hpp"
-
+#include "Core/Window.hpp"
+#include "Core/EventManager.hpp"
 
 int main(int argc, char* argv[]) 
 {
 	editor::Logger::SetSeverityThreshold(editor::Severity::Info);
 
 
-	SDL_Init(SDL_INIT_EVERYTHING);
+	editor::EventManager::GetInstance().Initialise();
 
-	SDL_Window* window = SDL_CreateWindow("Code Editor", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, SDL_WINDOW_SHOWN);
 
-	bool open = true;
+	editor::Window window; 
+	window.Create("Code Editor", 1280, 720);
 
-	while (open) 
+	editor::EventManager::GetInstance().RegisterWindow(&window);
+
+	while (editor::EventManager::GetInstance().IsRunning()) 
 	{
-		SDL_Event evnt; 
-		while(SDL_PollEvent(&evnt)) 
-		{
-			switch(evnt.type) 
-			{
-				case SDL_QUIT: open = false; break;
-			}
-		}
+		editor::EventManager::GetInstance().HandleEvents(); 
 	}
 
-	SDL_DestroyWindow(window);
-	SDL_Quit();
+
+	editor::EventManager::GetInstance().Quit();
 	return 0; 
 }

@@ -1,3 +1,3 @@
 
 
-target_sources(CodeEditor PRIVATE "Logger.hpp" "Logger.cpp" "Window.hpp")
+target_sources(CodeEditor PRIVATE "Logger.hpp" "Logger.cpp" "Window.hpp" "Window.cpp" "EventManager.hpp" "EventManager.cpp")

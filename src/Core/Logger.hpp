@@ -19,18 +19,22 @@ namespace editor
     };
 
     /*  Converts a Severity enum to a string */
-    static const std::string& SeverityToString(Severity severity) 
+   static const std::string& SeverityToString(Severity severity) 
     {
-        switch(severity) 
-        {
-        case Severity::Fatal: return "Fatal"; break;
-        case Severity::Error: return "Error"; break;
-        case Severity::Warning: return "Warning"; break;
-        case Severity::Info: return "Info"; break;
-        default: 
-            return ""; 
-            break;
-        };
+        static const std::string fatal = "Fatal";
+        static const std::string error = "Error";
+        static const std::string warning = "Warning";
+        static const std::string info = "Info";
+        static const std::string empty = "";
+
+            switch(severity) 
+            {
+            case Severity::Fatal: return fatal;
+            case Severity::Error: return error;
+            case Severity::Warning: return warning;
+            case Severity::Info: return info;
+            default: return empty; 
+        }
     }
 
     /*
@@ -47,12 +51,8 @@ namespace editor
             m_Threshold = severity; 
         }
         
-        /* 
-            Base print function 
-        
-            TODO: Add colour functionality 
-        */
-
+        /* Base print function */
+        /* TODO: Add colour functionality */
         template<class ... Args> 
         static void Print(Severity severity, const std::string& str, Args&&... args) 
         {
@@ -64,7 +64,6 @@ namespace editor
             std::string formattedString = fmt::format(str, std::forward<Args>(args)...);
             
             // Output to stdout
-            // TODO: Change this to be a customisable ostream 
             std::cout << fmt::format("[{}] -> {}\n", SeverityToString(severity), formattedString);
 
             if (severity == Severity::Fatal) 
@@ -85,20 +84,17 @@ namespace editor
             Print(Severity::Info, str, std::forward<Args>(args)...);
         }
 
-
         template<class ... Args> 
         static void Warning(const std::string& str, Args&&... args)
         {
             Print(Severity::Warning, str, std::forward<Args>(args)...);
         }
 
-
         template<class ... Args> 
         static void Error(const std::string& str, Args&&... args)
         {
             Print(Severity::Error, str, std::forward<Args>(args)...);
         }
-
 
         template<class ... Args> 
         static void Fatal(const std::string& str, Args&&... args)

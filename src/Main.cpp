@@ -2,6 +2,8 @@
 #include "Core/Logger.hpp"
 #include "Core/Window.hpp"
 #include "Core/EventManager.hpp"
+#include "Painter/Painter.hpp"
+
 
 
 int main(int argc, char* argv[]) 
@@ -12,13 +14,18 @@ int main(int argc, char* argv[])
 
 	editor::Window window; 
 	window.Create("Code Editor", 1280, 720, editor::WindowContext::OpenGL, editor::WindowStyling::AeroBorderless);
+	window.SetHitTestDragRect({ 0, 0, 64, 64 });
 
 	editor::EventManager::GetInstance().RegisterWindow(&window);
+
+	painter::Canvas canvas; 
 
 
 	while (editor::EventManager::GetInstance().IsRunning()) 
 	{
 		editor::EventManager::GetInstance().HandleEvents(); 
+
+		window.Present();
 	}
 
 

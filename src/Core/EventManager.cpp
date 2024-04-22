@@ -6,12 +6,23 @@
 namespace editor
 {   
 
+    void errorCallback(int code, const char* msg)
+    {
+        Logger::Error(msg);
+    }
+
+
+
     void EventManager::Initialise()
     {
         if (glfwInit() == GLFW_FALSE) 
         {
             Logger::Fatal("Failed to initialise GLFW");
         }
+
+        glfwSetErrorCallback(errorCallback);
+      
+
     }
 
     void EventManager::Quit()

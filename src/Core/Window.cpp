@@ -74,10 +74,18 @@ namespace editor
             {
                 return HTRIGHT;
             }
-            /*else
+          
+            maths::IntRect* dragRect = (maths::IntRect*)GetPropW(hWnd, L"dragRect");
+
+            // This could be null so check it isn't
+            if (dragRect)
             {
-                return HTCAPTION;
-            }*/
+                // If we are within this rect then return HTCAPTION
+                if (dragRect->PointIsWithin(clientMousePos.x, clientMousePos.y))
+                {
+                    return HTCAPTION;
+                }
+            }
 
             break;
         }
@@ -100,7 +108,17 @@ namespace editor
 
     void Window::Create(const std::string& title, const uint32_t width, const uint32_t height, WindowContext windowContext, WindowStyling styling)
     {
-        
+     
+        glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+
+        if (windowContext == WindowContext::OpenGL)
+        {
+            glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
+            glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+            glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+            glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+        }
+
         m_Window = glfwCreateWindow(width, height, title.c_str(), NULL, NULL);
 
         if (!m_Window)
@@ -133,9 +151,16 @@ namespace editor
         }
 
 #ifdef _WIN32
+        
+        // AeroBorderless removes the standard title bar drawn by windows so we can draw our own
+        // BUT! It keeps the standard resizing and IMPORTANTLY! it keeps the aero snapping which is vital 
+        // This is unsurprisingly a lot easier on MacOS
         if (styling & WindowStyling::AeroBorderless)
         {
-            HWND hWnd = glfwGetWin32Window(m_Window);
+            // The Wonderful world of Windows API 
+            // I used GLFW to not do this but anyway...
+
+            HWND hWnd = GetHWND();
 
             LONG_PTR lStyle = GetWindowLongPtr(hWnd, GWL_STYLE);
             lStyle |= WS_THICKFRAME;
@@ -158,7 +183,8 @@ namespace editor
 #endif
 
         Logger::Info("Successfully created window");   
-        
+
+    
     }
 
     void Window::HandleWindowEvents()
@@ -166,9 +192,23 @@ namespace editor
         
     }
 
+    void Window::Present()
+    {
+        glfwSwapBuffers(m_Window);
+    }
+
     void Window::SetTitle(const std::string& title)
     {
         glfwSetWindowTitle(m_Window, title.c_str());
+    }
+
+    void Window::SetHitTestDragRect(const maths::IntRect& rect)
+    {
+        m_HittestDragRect = rect; 
+
+#ifdef _WIN32
+        SetPropW(GetHWND(), L"dragRect", &m_HittestDragRect);
+#endif
     }
 
 #ifdef _WIN32

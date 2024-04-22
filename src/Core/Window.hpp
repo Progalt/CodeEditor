@@ -18,6 +18,8 @@
 
 #endif // _WIN32
 
+#include "../Maths/Rect.hpp"
+
 namespace editor
 {
 	enum class WindowContext
@@ -67,6 +69,8 @@ namespace editor
 		void HandleWindowEvents(); 
 		
 		void SetTitle(const std::string& title);
+
+		void Present();
 		
 		/* These are readonly. */
 
@@ -77,13 +81,18 @@ namespace editor
 
 		const bool IsOpen() const { return !glfwWindowShouldClose(m_Window); }
 
+		// When using AeroBorderless you can set a Hittest drag bounds
+		void SetHitTestDragRect(const maths::IntRect& rect);
+
 #ifdef _WIN32
 		HWND GetHWND();
 #endif // _WIN32
 
 	private:
 
-		GLFWwindow* m_Window; 
+		GLFWwindow* m_Window = nullptr; 
+
+		maths::IntRect m_HittestDragRect; 
 
 		uint32_t m_Width = 0; 
 		uint32_t m_Height = 0; 

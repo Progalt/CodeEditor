@@ -3,6 +3,7 @@
 #define RHI_DEVICE_H
 
 #include <memory>
+#include "Swapchain.hpp"
 
 namespace rhi
 {
@@ -15,6 +16,9 @@ namespace rhi
 
         // Destroy a hardware interface
         static void DestroyDevice(std::shared_ptr<Device> device);
+
+
+        virtual std::shared_ptr<Swapchain> CreateSwapchain(); 
 
     private: 
     };

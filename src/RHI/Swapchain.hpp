@@ -10,7 +10,7 @@ namespace rhi
     public:
 
     private: 
-    }
+    };
 }
 
 #endif // RHI_SWAPCHAIN_H

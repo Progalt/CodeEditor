@@ -14,19 +14,54 @@ namespace editor
     {
         if (m_Window && m_IsOpen) 
         {
+            if (m_Context)
+            {
+                SDL_GL_DeleteContext(m_Context);
+            }
+
             SDL_DestroyWindow(m_Window);
             m_IsOpen = false; 
             Logger::Info("Closed Window");
         }
     }
 
-    void Window::Create(const std::string& title, const uint32_t width, const uint32_t height)
+    void Window::Create(const std::string& title, const uint32_t width, const uint32_t height, WindowContext windowContext)
     {
+        uint32_t flags = SDL_WINDOW_SHOWN; 
+
+        // Pre window setup for graphics APIs. 
+
+        if (windowContext == WindowContext::OpenGL)
+        {
+            // Set this to share resources
+            SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
+
+            SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
+            SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
+
+            SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+            SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+            
+            // Add the flags to the window
+            flags |= SDL_WINDOW_OPENGL;
+
+        }
+
+        if (windowContext == WindowContext::Metal)
+        {
+            flags |= SDL_WINDOW_METAL;
+        }
+
+        if (windowContext == WindowContext::Vulkan)
+        {
+            flags |= SDL_WINDOW_VULKAN; 
+        }
+
         m_Window = SDL_CreateWindow(
             title.c_str(),  
             SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 
             width, height, 
-            SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE
+            flags
         );
 
         if (!m_Window) 
@@ -35,6 +70,18 @@ namespace editor
             return; 
         }
 
+        if (windowContext == WindowContext::OpenGL)
+        {
+            // For OpenGL we have to create a context
+
+            m_Context = SDL_GL_CreateContext(m_Window);
+            SDL_GL_MakeCurrent(m_Window, m_Context);
+
+            if (!m_Context)
+            {
+                Logger::Fatal("Failed to create OpenGL Context: {}", SDL_GetError());
+            }
+        }
         
         
         // Query the size from the window itself instead of using the parameters. Since it might've changed

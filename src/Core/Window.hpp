@@ -7,6 +7,16 @@
 
 namespace editor
 {
+	enum class WindowContext
+	{
+		None, 
+		OpenGL, 
+		Metal, 
+		Vulkan,
+		DirectX = None, 
+
+	};
+
 	/* Base Window class. Creates and manages a window and its events as well as OpenGL context if using OpenGL*/
 	class Window
 	{
@@ -18,7 +28,7 @@ namespace editor
 		void Close(); 
 		
 		// Create and initialise this window
-		void Create(const std::string& title, const uint32_t width, const uint32_t height); 
+		void Create(const std::string& title, const uint32_t width, const uint32_t height, WindowContext windowContext); 
 
 		// Handle events associated to this window
 		void HandleWindowEvents(SDL_Event* evnt); 

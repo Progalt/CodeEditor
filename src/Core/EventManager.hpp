@@ -23,6 +23,7 @@ namespace editor
 
         void Quit(); 
 
+        // Handle global events and pass it to the correct event handlers. 
         void HandleEvents();
 
         // Register a window to be known by the internal system

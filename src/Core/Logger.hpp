@@ -6,7 +6,6 @@
 #include <iostream> 
 #include <fmt/format.h>
 #include <utility>
-#include <SDL2/SDL.h>
 
 namespace editor 
 {
@@ -68,10 +67,9 @@ namespace editor
 
             if (severity == Severity::Fatal) 
             {
-                // On fatal we probably want to show an error message box
-                // TODO: Move SDL specific code out of here
+                // TODO: On fatal we probably want to show an error message box
 
-                SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Fatal Error", formattedString.c_str(), NULL);
+
             }
             
         }

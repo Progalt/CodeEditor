@@ -1,8 +1,21 @@
 
-
 ## Dependencies
-- SDL2
-- fmt 
+
+- GLFW
+- fmt
+
+## Cloning
+
+To clone the repo: 
+```
+git clone --recursive https://github.com/Progalt/CodeEditor.git
+```
+
+then run: 
+```
+git submodule update --init --recursive
+```
+This will update all submodules recursively. It may take a while but thats normal. 
 
 ## Building and Running
 
@@ -19,8 +32,8 @@ cd build
 cmake .. 
 make 
 ./codeeditor
+
 ```
-There is also a bash build script which builds and runs it called `linux_build.sh`. This file needs permissions but it should execute all the commands above. 
 
 ### Windows
 
@@ -29,3 +42,11 @@ Windows is a bit more complex (Because of course it is...).
 If possible I recommend opening the base directory in Visual Studio
 and letting it setup for CMake. This will output in and `out` folder by default. 
 
+Or: 
+
+```
+mkdir build
+cd build
+cmake ..
+```
+You should now have a Visual Studio solution to build. 

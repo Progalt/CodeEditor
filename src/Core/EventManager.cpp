@@ -1,6 +1,6 @@
 
 #include "EventManager.hpp"
-#include <SDL2/SDL.h>
+#include <GLFW/glfw3.h>
 #include "Logger.hpp"
 
 namespace editor
@@ -8,15 +8,15 @@ namespace editor
 
     void EventManager::Initialise()
     {
-        if (SDL_Init(SDL_INIT_EVERYTHING) < 0) 
+        if (glfwInit() == GLFW_FALSE) 
         {
-            Logger::Fatal("Failed to initialise SDL2: {}", SDL_GetError());
+            Logger::Fatal("Failed to initialise GLFW");
         }
     }
 
     void EventManager::Quit()
     {
-        SDL_Quit(); 
+        glfwTerminate();
     }
 
     void EventManager::RegisterWindow(Window* window, bool important) 
@@ -39,24 +39,7 @@ namespace editor
 
     void EventManager::HandleEvents()
     {
-        SDL_Event evnt; 
-        while (SDL_PollEvent(&evnt)) 
-        {
-            // Pass Window events to the Windows
-            for (auto& win : m_RegisteredWindows)
-            {
-                win.first->HandleWindowEvents(&evnt);
-            }
-
-            // Now handle other events
-
-            switch(evnt.type) 
-            {
-
-            }
-
-
-        }
+        glfwPollEvents();
 
     }
 }

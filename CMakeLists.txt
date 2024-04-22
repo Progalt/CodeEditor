@@ -4,11 +4,10 @@ cmake_policy(SET CMP0076 NEW)
 
 project(CodeEditor)
 
+add_subdirectory("glfw")
+add_subdirectory("fmt")
 
 
-
-find_package(SDL2 REQUIRED CONFIG REQUIRED COMPONENTS SDL2)
-find_package(SDL2 REQUIRED CONFIG COMPONENTS SDL2main)
 
 find_package(fmt)
 
@@ -20,11 +19,7 @@ set_target_properties(
     CXX_STANDARD_REQUIRED ON
 )
 
-if(TARGET SDL2::SDL2main)
-    target_link_libraries(CodeEditor PRIVATE SDL2::SDL2main)
-endif()
-
-target_link_libraries(CodeEditor PRIVATE SDL2::SDL2 fmt::fmt)
+target_link_libraries(CodeEditor glfw fmt::fmt)
 
 
 add_subdirectory("src")

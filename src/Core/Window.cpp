@@ -2,8 +2,91 @@
 #include "Window.hpp"
 #include "Logger.hpp"
 
+#define GLFW_EXPOSE_NATIVE_WIN32
+#include <GLFW/glfw3native.h>
+
 namespace editor 
 {
+
+#ifdef _WIN32
+
+    // https://discourse.glfw.org/t/making-a-custom-titlebar/2392/6
+
+    WNDPROC original_proc;
+
+    LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+    {
+        switch (uMsg)
+        {
+        case WM_NCCALCSIZE:
+        {
+            // Remove the window's standard sizing border
+            if (wParam == TRUE && lParam != NULL)
+            {
+                NCCALCSIZE_PARAMS* pParams = reinterpret_cast<NCCALCSIZE_PARAMS*>(lParam);
+                pParams->rgrc[0].top += 1;
+                pParams->rgrc[0].right -= 2;
+                pParams->rgrc[0].bottom -= 2;
+                pParams->rgrc[0].left += 2;
+            }
+            return 0;
+        }
+        case WM_NCPAINT:
+        {
+            // Prevent the non-client area from being painted
+            return 0;
+        }
+        case WM_NCHITTEST:
+        {
+            // Expand the hit test area for resizing
+            const int borderWidth = 4; // Adjust this value to control the hit test area size
+
+            POINTS mousePos = MAKEPOINTS(lParam);
+            POINT clientMousePos = { mousePos.x, mousePos.y };
+            ScreenToClient(hWnd, &clientMousePos);
+
+            RECT windowRect;
+            GetClientRect(hWnd, &windowRect);
+
+            if (clientMousePos.y >= windowRect.bottom - borderWidth)
+            {
+                if (clientMousePos.x <= borderWidth)
+                    return HTBOTTOMLEFT;
+                else if (clientMousePos.x >= windowRect.right - borderWidth)
+                    return HTBOTTOMRIGHT;
+                else
+                    return HTBOTTOM;
+            }
+            else if (clientMousePos.y <= borderWidth)
+            {
+                if (clientMousePos.x <= borderWidth)
+                    return HTTOPLEFT;
+                else if (clientMousePos.x >= windowRect.right - borderWidth)
+                    return HTTOPRIGHT;
+                else
+                    return HTTOP;
+            }
+            else if (clientMousePos.x <= borderWidth)
+            {
+                return HTLEFT;
+            }
+            else if (clientMousePos.x >= windowRect.right - borderWidth)
+            {
+                return HTRIGHT;
+            }
+            /*else
+            {
+                return HTCAPTION;
+            }*/
+
+            break;
+        }
+        }
+
+        return CallWindowProc(original_proc, hWnd, uMsg, wParam, lParam);
+    }
+
+#endif
 
     Window::~Window()
     {
@@ -12,109 +95,86 @@ namespace editor
 
     void Window::Close() 
     {
-        if (m_Window && m_IsOpen) 
-        {
-            if (m_Context)
-            {
-                SDL_GL_DeleteContext(m_Context);
-            }
-
-            SDL_DestroyWindow(m_Window);
-            m_IsOpen = false; 
-            Logger::Info("Closed Window");
-        }
+        
     }
 
-    void Window::Create(const std::string& title, const uint32_t width, const uint32_t height, WindowContext windowContext)
+    void Window::Create(const std::string& title, const uint32_t width, const uint32_t height, WindowContext windowContext, WindowStyling styling)
     {
-        uint32_t flags = SDL_WINDOW_SHOWN; 
+        
+        m_Window = glfwCreateWindow(width, height, title.c_str(), NULL, NULL);
 
-        // Pre window setup for graphics APIs. 
-
-        if (windowContext == WindowContext::OpenGL)
+        if (!m_Window)
         {
-            // Set this to share resources
-            SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
-
-            SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
-            SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
-
-            SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-            SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
-            
-            // Add the flags to the window
-            flags |= SDL_WINDOW_OPENGL;
-
-        }
-
-        if (windowContext == WindowContext::Metal)
-        {
-            flags |= SDL_WINDOW_METAL;
-        }
-
-        if (windowContext == WindowContext::Vulkan)
-        {
-            flags |= SDL_WINDOW_VULKAN; 
-        }
-
-        m_Window = SDL_CreateWindow(
-            title.c_str(),  
-            SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 
-            width, height, 
-            flags
-        );
-
-        if (!m_Window) 
-        {
-            Logger::Fatal("Failed to create Window: {}", SDL_GetError());
+            Logger::Fatal("Failed to create Window");
             return; 
         }
 
         if (windowContext == WindowContext::OpenGL)
         {
-            // For OpenGL we have to create a context
-
-            m_Context = SDL_GL_CreateContext(m_Window);
-            SDL_GL_MakeCurrent(m_Window, m_Context);
-
-            if (!m_Context)
-            {
-                Logger::Fatal("Failed to create OpenGL Context: {}", SDL_GetError());
-            }
+            glfwMakeContextCurrent(m_Window);
         }
-        
-        
-        // Query the size from the window itself instead of using the parameters. Since it might've changed
-        int w, h; 
-        SDL_GetWindowSize(m_Window, &w, &h);
 
-        m_Width = static_cast<uint32_t>(w);
-        m_Height = static_cast<uint32_t>(h);
-
-        m_Title = title; 
-
-        m_WindowID = SDL_GetWindowID(m_Window);
-
-        m_IsOpen = true; 
-
-
-         Logger::Info("Successfully created window");   
-        
-    }
-
-    void Window::HandleWindowEvents(SDL_Event* evnt)
-    {
-        if (evnt->type != SDL_WINDOWEVENT )
-            return; 
-
-        if (evnt->window.windowID != m_WindowID)
-            return;
-
-        switch(evnt->window.event) 
+        if (styling & WindowStyling::PreferDark)
         {
-        case SDL_WINDOWEVENT_CLOSE: 
-            Close(); 
-            break; 
-        };
+#ifdef _WIN32
+            HWND hwnd = GetHWND();
+
+            const BOOL darkMode = true; 
+
+            if (FAILED(DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &darkMode, sizeof(darkMode))))
+            {
+                Logger::Error("Failed to set window title bar to dark mode");
+            }
+
+            glfwHideWindow(m_Window);
+            glfwShowWindow(m_Window);
+
+#endif
+        }
+
+#ifdef _WIN32
+        if (styling & WindowStyling::AeroBorderless)
+        {
+            HWND hWnd = glfwGetWin32Window(m_Window);
+
+            LONG_PTR lStyle = GetWindowLongPtr(hWnd, GWL_STYLE);
+            lStyle |= WS_THICKFRAME;
+            lStyle &= ~WS_CAPTION;
+            SetWindowLongPtr(hWnd, GWL_STYLE, lStyle);
+
+            MARGINS margins = { 0 };
+            DwmExtendFrameIntoClientArea(hWnd, &margins);
+
+            RECT windowRect;
+            GetWindowRect(hWnd, &windowRect);
+            int width = windowRect.right - windowRect.left;
+            int height = windowRect.bottom - windowRect.top;
+
+            original_proc = (WNDPROC)GetWindowLongPtr(hWnd, GWLP_WNDPROC);
+            (WNDPROC)SetWindowLongPtr(hWnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(WindowProc));
+            SetWindowPos(hWnd, NULL, 0, 0, width, height, SWP_FRAMECHANGED | SWP_NOMOVE);
+        
+        }
+#endif
+
+        Logger::Info("Successfully created window");   
+        
     }
+
+    void Window::HandleWindowEvents()
+    {
+        
+    }
+
+    void Window::SetTitle(const std::string& title)
+    {
+        glfwSetWindowTitle(m_Window, title.c_str());
+    }
+
+#ifdef _WIN32
+    HWND Window::GetHWND()
+    {
+        return glfwGetWin32Window(m_Window); 
+    }
+#endif // _WIN32
 }
